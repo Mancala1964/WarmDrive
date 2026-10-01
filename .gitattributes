@@ -1,0 +1,4 @@
+# Keep Unix line endings for files that run on the Mac / in GitHub Actions.
+*.sh   text eol=lf
+*.yml  text eol=lf
+*.txt  text eol=lf

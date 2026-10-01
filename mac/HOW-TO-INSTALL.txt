@@ -1,0 +1,17 @@
+WARM DRIVE - install on your Mac
+================================
+
+1. Open Terminal (press Cmd+Space, type "Terminal", press Return).
+2. Type:  bash   followed by a space (don't press Return yet).
+3. Drag "install.sh" from this folder into the Terminal window.
+4. Press Return.
+5. Quit GarageBand completely (Cmd+Q) and open it again.
+
+In GarageBand:
+- Select an audio track (or a software instrument track).
+- Open Smart Controls (press B) > Plug-ins.
+- Click an empty slot > Audio Units > Ortiz > Warm Drive.
+
+If it doesn't show up:
+- GarageBand > Settings > Audio/MIDI: make sure "Enable Audio Units" is ticked.
+- Restart the Mac once (this forces a full Audio Unit re-scan).

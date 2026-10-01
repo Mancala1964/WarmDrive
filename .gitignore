@@ -1,0 +1,7 @@
+build/
+out/
+.vs/
+dist/
+*.user
+.DS_Store
+CMakeSettings.json

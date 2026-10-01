@@ -1,0 +1,63 @@
+# Builds the Mac Audio Unit (for GarageBand / Logic) on GitHub's Mac computers.
+# Runs automatically every time you push to GitHub, or manually from the
+# "Actions" tab ("Run workflow" button).
+
+name: Build Mac plugin
+
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build-mac:
+    runs-on: macos-latest
+    timeout-minutes: 45
+
+    steps:
+      - name: Get the code
+        uses: actions/checkout@v7
+
+      - name: Configure (Universal = Apple Silicon + Intel)
+        run: >
+          cmake -B build
+          -DCMAKE_BUILD_TYPE=Release
+          -DCMAKE_OSX_ARCHITECTURES="arm64;x86_64"
+          -DCMAKE_OSX_DEPLOYMENT_TARGET=11.0
+
+      - name: Build the Audio Unit
+        run: cmake --build build --config Release --target WarmDrive_AU --parallel 4
+
+      - name: Sign (ad-hoc, for personal use) and package
+        run: |
+          COMPONENT="$(find build -type d -name 'Warm Drive.component' | head -n 1)"
+          echo "Found: $COMPONENT"
+          test -n "$COMPONENT"
+
+          codesign --force --deep --sign - "$COMPONENT"
+          codesign --verify --verbose "$COMPONENT"
+          lipo -info "$COMPONENT/Contents/MacOS/Warm Drive"
+
+          mkdir -p dist
+          cp -R "$COMPONENT" dist/
+          cp mac/install.sh mac/HOW-TO-INSTALL.txt dist/
+          chmod +x dist/install.sh
+          # ditto keeps the Mac bundle structure and permissions intact
+          (cd dist && ditto -c -k --sequesterRsrc . ../WarmDrive-mac.zip)
+
+      - name: Upload WarmDrive-mac.zip
+        uses: actions/upload-artifact@v7
+        with:
+          path: WarmDrive-mac.zip
+          archive: false
+          retention-days: 30
+
+      - name: Validate with Apple's auval
+        run: |
+          DEST="$HOME/Library/Audio/Plug-Ins/Components"
+          mkdir -p "$DEST"
+          rm -rf "$DEST/Warm Drive.component"
+          cp -R "dist/Warm Drive.component" "$DEST/"
+          killall -9 AudioComponentRegistrar 2>/dev/null || true
+          sleep 2
+          auval -v aufx Wdrv Ortz
